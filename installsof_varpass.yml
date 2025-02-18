@@ -1,0 +1,21 @@
+---
+- name: Install net tools as var
+  hosts: hostone
+  become: yes
+  vars:
+    networkinstall: "net-tools"
+  tasks:
+    - name: install
+      apt:
+        name:
+          - "{{ networkinstall }}"
+        state: latest
+
+  tasks:
+    - name: find whoami
+      shell: "whoami"
+      register: shell_output
+    - name: Print the output
+      debug:
+        msg: "{{ shell_output.stdout_lines }}"
+  

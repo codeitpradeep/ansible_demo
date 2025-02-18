@@ -1,0 +1,19 @@
+---
+- name: Install
+  hosts: hostname
+  become: yes
+
+  tasks:
+    - name: Install python
+      apt:
+        name:
+          - python3
+          - net-tools
+          - firewalld
+        state: latest
+    - name: enable firewalld
+      service:
+        name: firewalld
+        enabled: true
+        state: started
+        
