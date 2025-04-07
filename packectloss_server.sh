@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the target IP and packet loss percentage
-TARGET_IP="142.250.195.142"  # Change this to the target server
+TARGET_IP="codeitpradeep.github.io"  # Change this to the target server
 PACKET_LOSS="70%"  # Percentage of packets to drop
 
 echo "Introducing $PACKET_LOSS packet loss for traffic to $TARGET_IP..."

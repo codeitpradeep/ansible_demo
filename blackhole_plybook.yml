@@ -1,0 +1,28 @@
+---
+- name: Block and unblock traffic to a specific host
+  hosts: hostone
+  become: yes
+  vars:
+    server1: "codeitpradeep.github.io"
+    block_time: 60
+
+  tasks:
+    - name: Block all traffic to and from {{ server1 }}
+      ansible.builtin.shell: |
+        iptables -A INPUT -s {{ server1 }} -j DROP
+        iptables -A OUTPUT -d {{ server1 }} -j DROP
+      ignore_errors: true
+
+    - name: Wait for {{ block_time }} seconds
+      ansible.builtin.pause:
+        seconds: "{{ block_time }}"
+
+    - name: Unblock all traffic to and from {{ server1 }}
+      ansible.builtin.shell: |
+        iptables -D INPUT -s {{ server1 }} -j DROP
+        iptables -D OUTPUT -d {{ server1 }} -j DROP
+      ignore_errors: true
+
+    - name: Show unblock message
+      ansible.builtin.debug:
+        msg: "Traffic to/from {{ server1 }} is now unblocked."

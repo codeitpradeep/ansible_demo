@@ -1,0 +1,47 @@
+---
+- name: Simulate network latency for specific duration
+  hosts: all
+  become: yes
+  vars:
+    target_host: "codeitpradeep.github.io"
+    delay_ms: "100ms"
+    mark_value: 10
+    iface: "eth0"
+    latency_duration_mins: 5  # User-defined in minutes
+
+  tasks:
+    - name: Convert latency duration to seconds
+      set_fact:
+        latency_duration_secs: "{{ latency_duration_mins | int * 60 }}"
+
+    - name: Add iptables mark for target IP
+      command: >
+        iptables -t mangle -A OUTPUT -d {{  target_host }}
+        -j MARK --set-mark {{ mark_value }}
+
+    - name: Add tc prio qdisc
+      command: "tc qdisc add dev {{ iface }} root handle 1: prio"
+      ignore_errors: yes
+
+    - name: Add tc netem delay
+      command: "tc qdisc add dev {{ iface }} parent 1:1 handle 10: netem delay {{ delay_ms }}"
+      ignore_errors: yes
+
+    - name: Add tc filter for marked packets
+      command: >
+        tc filter add dev {{ iface }} parent 1:0 protocol ip handle {{ mark_value }} fw flowid 1:1
+      ignore_errors: yes
+
+    - name: Pause for defined duration (in seconds)
+      pause:
+        seconds: "{{ latency_duration_secs }}"
+
+    - name: Remove tc qdisc
+      command: "tc qdisc del dev {{ iface }} root"
+      ignore_errors: yes
+
+    - name: Remove iptables mark rule
+      command: >
+        iptables -t mangle -D OUTPUT -d {{  target_host }}
+        -j MARK --set-mark {{ mark_value }}
+      ignore_errors: yes

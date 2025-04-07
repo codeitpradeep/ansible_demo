@@ -1,0 +1,33 @@
+---
+- name: CPU stress testing with specific load
+  hosts: hostone
+  become: yes
+  vars:
+    cpu_load: 50         # % CPU load (20, 50, 90, etc.)
+    cpu_time: 60s        # Duration to run stress-ng
+
+  tasks:
+
+    - name: Check if stress-ng is installed
+      ansible.builtin.command: which stress-ng
+      register: stressng_check
+      ignore_errors: true
+
+    - name: Install stress-ng if not present
+      ansible.builtin.package:
+        name: stress-ng
+        state: present
+      when: stressng_check.rc != 0
+
+    - name: Get number of CPU cores
+      ansible.builtin.command: nproc
+      register: cpu_cores
+
+    - name: Run stress-ng with defined CPU load
+      ansible.builtin.command: >
+        stress-ng --cpu {{ cpu_cores.stdout }}
+                  --cpu-method matrixprod 
+                  --cpu-load {{ cpu_load }} 
+                  --timeout {{ cpu_time }}
+      async: 0
+      poll: 0

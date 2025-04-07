@@ -1,7 +1,7 @@
  #!/bin/bash
 
 # Define the IP addresses of the two servers
-SERVER1="180.253.136.245"
+SERVER1="codeitpradeep.github.io"
 
 BLOCK_TIME=60  # 5 minutes
 

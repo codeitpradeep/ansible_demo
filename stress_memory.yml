@@ -1,0 +1,40 @@
+---
+- name: Stress memory with stress-ng
+  hosts: hostone
+  become: yes
+  vars:
+    mem_percent: 50     # Memory usage percentage (e.g., 20, 50, 80)
+    duration: 60s       # Duration to run stress-ng
+    workers: 1          # Number of memory stressor workers
+
+  tasks:
+    - name: Check if stress-ng is installed
+      command: which stress-ng
+      register: stressng_check
+      ignore_errors: true
+
+    - name: Install stress-ng if not present
+      package:
+        name: stress-ng
+        state: present
+      when: stressng_check.rc != 0
+
+    - name: Get total system memory in bytes
+      command: grep MemTotal /proc/meminfo
+      register: meminfo
+
+    - name: Calculate memory to stress in bytes
+      set_fact:
+        mem_bytes: "{{ ((meminfo.stdout.split()[1]|int * 1024) * mem_percent / 100) | int }}"
+
+    - name: Format memory size with suffix (e.g., 524288000 -> 500M)
+      set_fact:
+        mem_size: "{{ (mem_bytes | int / 1048576)|int }}M"
+
+    - name: Run stress-ng to stress memory
+      command: >
+        stress-ng --vm {{ workers }}
+                  --vm-bytes {{ mem_size }}
+                  --timeout {{ duration }}
+      async: 0
+      poll: 0
